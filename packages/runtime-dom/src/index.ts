@@ -1,22 +1,32 @@
 /*
  * @Author: your name
  * @Date: 2021-10-13 10:56:01
- * @LastEditTime: 2021-10-13 21:39:09
+ * @LastEditTime: 2021-10-17 19:16:58
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /mini-vue3/package/runtime-dom/src/index.ts
  */
+import {
+  CreateAppFunction,
+} from '@vue/runtime-core';
+
+import {
+  createRenderer,
+  Renderer,
+} from '@vue/runtime-dom';
+
 import { 
   isFunction,
+  isString,
   extend,
-} from '../../shared'
+} from '@vue/shared';
 
 
 
-const rendererOptions = extend({ patchProp }, nodeOps)
+const rendererOptions = extend({ patchProp }, nodeOps);
 
 let renderer: Renderer<Element | ShadowRoot> | HydrationRenderer
-
+// 延时创建渲染器，当用户只依赖响应式包的时候，可以通过tree-shaking移除核心渲染逻辑相关的代码
 function ensureRenderer() {
   return (
     renderer ||
@@ -25,6 +35,7 @@ function ensureRenderer() {
 }
 
 export const createApp = ((...args) => {
+  // ensureRenderer创建渲染器对象：包含平台渲染核心逻辑的JavaScript对象
   const app = ensureRenderer().createApp(...args)
 
   const { mount } = app
@@ -67,3 +78,17 @@ export const createApp = ((...args) => {
   }
   return app
 }) as CreateAppFunction<Element>
+
+function normalizeContainer (
+  container: Element | ShadowRoot | string
+): Element | null {
+  if (isString(container)) {
+    const res = document.querySelector(container);
+    if (__DEV__ && !res) {
+      warn(
+        `Failed to mount app: mount target selector "${container}" returned null.`
+      )
+    }
+    return res
+  }
+}
