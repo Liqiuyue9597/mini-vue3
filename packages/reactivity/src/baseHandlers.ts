@@ -1,10 +1,15 @@
 import { extend, isObject } from "@vue/shared";
+import { track } from "./effect";
+import { TrackOpTypes } from "./operations";
 import { reactive, readonly } from "./reactive";
 
 
 let readonlyObj = {
   set: (target, key) => {
-    console.warn(`设置${key}失败`);
+    console.warn(
+      `Set operation on key "${String(key)}" failed: target is readonly.`,
+      target
+    )
   }
 };
 
@@ -13,18 +18,19 @@ const shallowGet = createGetter(false, true);
 const readonlyGet = createGetter(true, false);
 const shallowReadonlyGet = createGetter(true, true);
 function createGetter(isReadonly = false, shallow = false) {
-  return function get (target, key, receiver) {
+  return function get(target, key, receiver) {
     const res = Reflect.get(target, key, receiver);
 
     if (!isReadonly) {
       // 收集依赖
+      track(target, TrackOpTypes.GET, key);
     }
     if (shallow) {
       return res;
     }
     if (isObject(res)) {
       return isReadonly ? readonly(res) : reactive(res);
-    } 
+    }
     return res;
   }
 }
@@ -35,7 +41,7 @@ const shallowSet = createSetter(true);
 function createSetter(shallow = false) {
   return function set(target, key, value, receiver) {
     const result = Reflect.set(target, key, value, receiver);
-    
+
 
     return result;
   }

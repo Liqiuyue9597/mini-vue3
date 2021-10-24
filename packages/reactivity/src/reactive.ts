@@ -6,21 +6,21 @@ import {
   shallowReadonlyHandlers
 } from "./baseHandlers"
 
-// weakMap的有点
+// weakMap的特点
 const reactiveMap = new WeakMap();
 const readonlyMap = new WeakMap();
 
-export function reactive (target, false) {
-  return createReactive(target, false);
+export function reactive (target) {
+  return createReactive(target, false, mutableHandlers);
 }
-export function shallowReactive (target, false) {
-
+export function shallowReactive (target) {
+  return createReactive(target, false, shallowReactiveHandlers);
 }
-export function readonly (target, true) {
-
+export function readonly (target) {
+  return createReactive(target, true, readonlyHandlers);
 }
-export function shallowReadonly (target, true) {
-
+export function shallowReadonly (target) {
+  return createReactive(target, true, shallowReadonlyHandlers);
 }
 
 
