@@ -13,9 +13,12 @@
   <script src="../node_modules/@vue/reactivity/dist/reactivity.global.js"></script>
   <script>
     let { effect, reactive } = VueReactivity;
-    let state = {name: '11', age: {n:222}};
+    let state = reactive({ name: '11', age: 12, arr: [1, 2, 3] });
     effect(() => {
       app.innerHTML = 'effect' + state.name;
+    })
+    setTimeout(() => {
+      state.age = 'xxxx'
     })
   </script>
 </body>

@@ -1,6 +1,6 @@
-import { extend, isObject } from "@vue/shared";
-import { track } from "./effect";
-import { TrackOpTypes } from "./operations";
+import { extend, hasChanged, hasOwn, isArray, isIntegerKey, isObject } from "@vue/shared";
+import { track, trigger } from "./effect";
+import { TrackOpTypes, TriggerOpTypes } from "./operations";
 import { reactive, readonly } from "./reactive";
 
 
@@ -40,7 +40,24 @@ const set = createSetter();
 const shallowSet = createSetter(true);
 function createSetter(shallow = false) {
   return function set(target, key, value, receiver) {
+    // 新增/修改/没改
+    const oldValue = target[key];
+    const hadKey = isArray(target) && isIntegerKey(key)
+      ? Number(key) < target.length
+      : hasOwn(target, key)
+
+    if (!hadKey) {
+      // 新增
+      trigger(target, TriggerOpTypes.ADD, key, value);
+    } else if (hasChanged(value, oldValue)) {
+      // 修改：但是值不一样
+      trigger(target, TriggerOpTypes.SET, key, value, oldValue);
+
+    }
+
+
     const result = Reflect.set(target, key, value, receiver);
+    // 当数据更新时，通知对应属性的effect重新执行
 
 
     return result;
@@ -49,10 +66,12 @@ function createSetter(shallow = false) {
 
 
 export const mutableHandlers = {
-  get
+  get,
+  set
 }
 export const shallowReactiveHandlers = {
-  get: shallowGet
+  get: shallowGet,
+  set: shallowSet
 }
 export const readonlyHandlers = extend({
   get: readonlyGet,

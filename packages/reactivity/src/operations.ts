@@ -4,5 +4,6 @@ export const enum TrackOpTypes {
 }
 
 export const enum TriggerOpTypes {
-  SET = 'set'
+  SET = 'set',
+  ADD = 'add'
 }
